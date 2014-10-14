@@ -1,17 +1,60 @@
-/*************************************************************
-*
-Write a set of Q-ing routines as follows. The routines manipulate a queue and items. Q is a pointer to the first element of the queue (aka head pointer) and the queue is circular, doubly linked. The items are of type  TCB_t (defined later). The routines are:
+#include "TCB.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-InitQ (*Q)  //Note that if Q is a head pointer to the queue, then InitQ will have to be passed &Q.
-AddQ(*Q, *item)
-DelQ(*Q) // will return a pointer to the item deleted.
-RotateQ(*Q) // deletes the head and adds it to the tail, by just moving the header pointer to the next item.
 
-Please (please) thoroughly double check the correctness of the Q implementation, by using a Q of integers and many tests. Put the final implementation into a file called q.h. Especially test the situation where the last element gets deleted from a Q, and what happens when you try to delete an item from an empty Q.
+void InitQ(TCB_t **head){
+	*head = 0;
+}
 
-Test.
-Then re-test. 
-The Q routines are the cause on 95% of the problems with this and subsequent projects.
- It is the hardest module to write correctly
-...
-*/
+void AddQ(TCB_t **head, TCB_t *item){
+
+	if(*head == 0){
+		//When the head pointer is null
+		item->next = 0;
+		item->prev = 0;
+		*head = item;
+	}
+	else if((*head)->prev == 0){
+		//When there is one node	
+		(*head)->next = item;
+		(*head)->prev = item;
+		item->next = *head;
+		item->prev = *head;
+	}
+	else{
+		//When there is more than one node					
+		(*head)->prev->next = item;
+		item->prev = (*head)->prev;
+		(*head)->prev = item;
+		item->next = *head;
+	}
+}
+
+TCB_t * DelQ(TCB_t **head){
+	if((*head) == 0)
+		return 0;
+	TCB_t *temp = *head;
+	if((*head)->next == 0){
+		//When there is one node
+		*head = (*head)->next;
+	}
+	else if((*head)->prev == (*head)->next){
+		//When there are two nodes
+		*head = (*head)->next;
+		(*head)->prev = 0;
+		(*head)->next = 0;
+	}
+	else if((*head)->prev != (*head)->next){
+		//When there are more than two nodes
+		*head = (*head)->next;
+		temp->prev->next = *head;
+		(*head)->prev = temp->prev;
+	}
+	return temp;
+}
+
+void RotateQ(TCB_t **head){
+	if(*head != 0)
+		(*head) = (*head)->next;
+}

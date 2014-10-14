@@ -1,29 +1,28 @@
-/*************************************************************
-*
-Write the routine to start threads and the “yield” routine and the “run” routine which cranks up the works. You will need to include q.h, Put these routines in the file “threads.h”
+#include "q.h"
 
-void start_thread(void (*function)(void))
-{ // begin pseudo code
-     allocate a stack (via malloc) of a certain size (choose 8192)
-     allocate a TCB (via malloc)
-     call init_TCB with appropriate arguments
-     call addQ to add this TCB into the “RunQ” which is a global header pointer
-  //end pseudo code
+const int STACK_SIZE = 8192;
+TCB_t *RunQ = 0;
+
+
+
+void start_thread(void (* function)(void)){
+  void *stack = (void *) malloc (STACK_SIZE);
+  TCB_t *tcb = (TCB_t *) malloc (sizeof (TCB_t));
+  init_TCB(tcb,function,stack,STACK_SIZE);
+  AddQ(&RunQ,tcb);
 }
 
-void run()
-{   // real code
-    ucontext_t parent;     // get a place to store the main context, for faking
-    getcontext(&parent);   // magic sauce
-    swapcontext(&parent, &(RunQ->conext));  // start the first thread
+void run(){
+  ucontext_t parent;
+  getcontext(&parent);
+  swapcontext(&parent, &(RunQ->context));
 }
-void yield() // similar to run
-{
-   rotate the run Q;
-   swap the context, from previous thread to the thread pointed to by runQ
+
+void yield(){
+  ucontext_t prevThread;
+  getcontext(&prevThread);
+  RunQ->context = prevThread;
+  RotateQ(&RunQ);
+  swapcontext(&prevThread,&(RunQ->context));
 }
-...
-*/
-
-
 
