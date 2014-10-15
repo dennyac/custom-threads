@@ -1,9 +1,8 @@
 /*************************************************************
 *
-Author:
-Denny Abraham Cheriyan
-Adrin Peter Fernandes
-...
+  Author: Denny Abraham Cheriyan, Adrin Peter Fernandes
+  Testing threads.h using infinite functions
+
 */
 
 #include "threads.h"

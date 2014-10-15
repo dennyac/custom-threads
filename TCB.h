@@ -1,3 +1,10 @@
+/*************************************************************
+*
+	Author: Denny Abraham Cheriyan, Adrin Peter Fernandes
+	Contains TCB structure definition and code to initialize TCB
+
+*/
+
 #include <ucontext.h>
 #include <string.h>
 

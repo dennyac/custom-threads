@@ -1,3 +1,11 @@
+/*************************************************************
+*
+	Author: Denny Abraham Cheriyan, Adrin Peter Fernandes
+	Contains functions to initialize, add, delete and rotate
+	a doubly linked circular queue
+
+*/
+
 #include "TCB.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,22 +16,14 @@ void InitQ(TCB_t **head){
 }
 
 void AddQ(TCB_t **head, TCB_t *item){
-
 	if(*head == 0){
 		//When the head pointer is null
-		item->next = 0;
-		item->prev = 0;
 		*head = item;
-	}
-	else if((*head)->prev == 0){
-		//When there is one node	
-		(*head)->next = item;
-		(*head)->prev = item;
-		item->next = *head;
-		item->prev = *head;
+		(*head)->next = *head;
+		(*head)->prev = *head;
 	}
 	else{
-		//When there is more than one node					
+		//When there is one or more nodes					
 		(*head)->prev->next = item;
 		item->prev = (*head)->prev;
 		(*head)->prev = item;
@@ -35,18 +35,12 @@ TCB_t * DelQ(TCB_t **head){
 	if((*head) == 0)
 		return 0;
 	TCB_t *temp = *head;
-	if((*head)->next == 0){
+	if((*head)->next == *head){
 		//When there is one node
-		*head = (*head)->next;
+		*head = 0;
 	}
-	else if((*head)->prev == (*head)->next){
-		//When there are two nodes
-		*head = (*head)->next;
-		(*head)->prev = 0;
-		(*head)->next = 0;
-	}
-	else if((*head)->prev != (*head)->next){
-		//When there are more than two nodes
+	else {
+		//When there are two or more nodes
 		*head = (*head)->next;
 		temp->prev->next = *head;
 		(*head)->prev = temp->prev;

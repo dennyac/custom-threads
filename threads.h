@@ -1,9 +1,14 @@
+/*************************************************************
+*
+  Author: Denny Abraham Cheriyan, Adrin Peter Fernandes
+  Contains functions to Start, Run and Yield to other threads
+
+*/
+
 #include "q.h"
 
 const int STACK_SIZE = 8192;
 TCB_t *RunQ = 0;
-
-
 
 void start_thread(void (* function)(void)){
   void *stack = (void *) malloc (STACK_SIZE);
@@ -19,10 +24,8 @@ void run(){
 }
 
 void yield(){
-  ucontext_t prevThread;
-  getcontext(&prevThread);
-  RunQ->context = prevThread;
+  ucontext_t *current = &(RunQ->context);
   RotateQ(&RunQ);
-  swapcontext(&prevThread,&(RunQ->context));
+  swapcontext(current,&(RunQ->context));
 }
 
