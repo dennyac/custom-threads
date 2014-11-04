@@ -1,10 +1,18 @@
-// (c) Partha Dasgupta 2009
-// permission to use and distribute granted.
-//rwc - readers waiting count
-//wwc - writer waiting count
-//rc - reader count
-//writer count
+/*************************************************************
+*
+	Author: Denny Abraham Cheriyan, Adrin Peter Fernandes
+	
+	Readers/Writers problem using custom semaphores.
+	Code taken from the Readers/Writers problem using lpthreads
+	which was written by Partha Dasgupta
 
+	rwc - readers waiting count
+	wwc - writer waiting count
+	rc  - reader count
+	wc  - writer count
+
+
+*/
 
 
 #include <stdio.h>
@@ -18,7 +26,7 @@ int rwc = 0, wwc = 0, rc = 0, wc = 0, global_ID=0;
 
 //When there are no waiting writers or current writers - 
 //Reader entry - One reader will acquire the lock, and then - 
-// If there are no waiting readers ( happens when waiting writers or current writers )  it will release the lock
+// If there are no waiting readers ( happens when waiting writers or current writers ) it will release the lock
 // else it will release one waiting reader which will release another waiting reader(cascading effect),
 // and the last waiting reader will release the lock
 void reader_entry(int ID)
