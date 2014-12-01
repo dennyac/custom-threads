@@ -3,6 +3,16 @@
 #include <string.h>
 #include "msgs.h"
 
+//Things to do
+//What happens if the port is full, or the request has more messages than the port can handle
+//probably send ack/nack if the port can handle
+//will delete have to get the message 
+
+//Add operation
+//reply_port  operation numberOfMessages modify_location
+//Delete operation
+//redeclarations 
+
 int **encode(char * string);
 char * decode(int ** mat, int rows);
 void print_matrix(int rows, int **mat);
@@ -94,8 +104,11 @@ int clientPorts = 10;
 
 void server(void){
     //No mutex needed as we are using user threads
+    int replyPort,numMessages;
+    int **messages=0;
     char * table[10];
     int pos=0;
+    int location=0;
     int id=numServerPorts++;
     int msg[10],i,j;
     while(1){      
@@ -107,10 +120,10 @@ void server(void){
         switch(msg[1]){
           case 0: //add operation
                   printf("Server%d: Received add message from Client%d\n",id,msg[0]);
-                  int replyPort = msg[0];
-                  int numMessages = msg[2];
+                  replyPort = msg[0];
+                  numMessages = msg[2];
 
-                  int **messages = (int **) malloc(sizeof(int *)*numMessages);
+                  messages = (int **) malloc(sizeof(int *)*numMessages);
                   for(i=0; i<numMessages; i++)
                   /* Allocate array, store pointer  */
                       messages[i] = (int *) malloc(sizeof(int)*10); 
@@ -118,14 +131,14 @@ void server(void){
                   //Reconstruct message array
                   for(i=0;i<numMessages;i++){
                     Receive(&p[id],msg);
-                    printf("Server%d: Received add message%d from Client%d\n",id,i,msg[0]);
+                    printf("Server%d: Received add message%d from Client%d\n",id,i,replyPort);
                     //print_matrix(1,msg);
                     for(j=0;j<10;j++)
                       messages[i][j] = msg[j];
                   }
-                  printf("Printing Matrix on server side\n");
-                  print_matrix(numMessages,messages);
-                  printf("Decoded message at server%s\n", decode(messages,numMessages));
+                  // printf("Printing Matrix on server side\n");
+                  // print_matrix(numMessages,messages);
+                  // printf("Decoded message at server%s\n", decode(messages,numMessages));
                   if(pos<10){
                     table[pos++] = decode(messages,numMessages);
 
@@ -138,10 +151,63 @@ void server(void){
                     Send(&p[replyPort],msg);
                   }
                   free_matrix(numMessages,messages);
+                  break;
+          case 1: //delete operation
+                  printf("Server%d: Received delete message from Client%d\n",id,msg[0]);
+                  replyPort = msg[0];
+
+                  
+                  if(pos>0){
+                    table[--pos] = 0;
+
+                    msg[0]=1;
+                    //Success
+                    Send(&p[replyPort],msg);
+                  }
+                  else{
+                    msg[0]=0; 
+                    Send(&p[replyPort],msg);
+                  }
+                  break;
+          case 2: //modify operation
+                  printf("Server%d: Received modify message from Client%d\n",id,msg[0]);
+                  replyPort = msg[0];
+                  numMessages = msg[2];
+                  location = msg[3];
+
+                  messages = (int **) malloc(sizeof(int *)*numMessages);
+                  for(i=0; i<numMessages; i++)
+                  /* Allocate array, store pointer  */
+                      messages[i] = (int *) malloc(sizeof(int)*10); 
+
+                  //Reconstruct message array
+                  for(i=0;i<numMessages;i++){
+                    Receive(&p[id],msg);
+                    printf("Server%d: Received modify message%d from Client%d\n",id,i,replyPort);
+                    //print_matrix(1,msg);
+                    for(j=0;j<10;j++)
+                      messages[i][j] = msg[j];
+                  }
+                  // printf("Printing Matrix on server side\n");
+                  // print_matrix(numMessages,messages);
+                  // printf("Decoded message at server%s\n", decode(messages,numMessages));
+                  if(table[location]){
+                    table[location] = decode(messages,numMessages);
+
+                    msg[0]=1;
+                    //Success
+                    Send(&p[replyPort],msg);
+                  }
+                  else{
+                    msg[0]=0;
+                    Send(&p[replyPort],msg);
+                  }
+                  free_matrix(numMessages,messages);
+                  break;        
         }
         for(i=0;i<pos;i++)
-          printf("%s\n", table[i]);
-        sleep(1);
+          printf("%d: %s\n", i, table[i]);
+        sleep(2);
     }   
 }
 
@@ -150,14 +216,18 @@ void client(void){
     
 
     int id=clientPorts++;
+    int **messages=0;
+    char * messageString=0;
     int msg[10]={0},i,j;
     int serverPort;
+    int location=0;
+    int length=0,numMessages=0;
     while(1){
         
         serverPort = currentServerPort;
         currentServerPort = (currentServerPort+1) % numServerPorts;
-        //int operation = rand()%4;
-        int operation = 0;
+        int operation = rand()%3;
+        //int operation = 0;
         //Sending the client port on the array index 0 of the message.
         msg[0]=id;
         msg[1]=operation;
@@ -166,17 +236,17 @@ void client(void){
         switch(operation){
           case 0: //add operation
                   printf("Client%d: Sending add message to server\n",id);
-                  char * messageString = "MessageMessage";
-                  int length = strlen(messageString);
-                  int numMessages = length/10 + (length%10 !=0);
+                  messageString = "MessageMessage";
+                  length = strlen(messageString);
+                  numMessages = length/10 + (length%10 !=0);
                   msg[2]=numMessages;
                   //Message Header
                   Send(&p[serverPort],msg);
-                  int **messages = encode(messageString);
+                  messages = encode(messageString);
 
-                  printf("Printing Matrix on client side\n");
-                  print_matrix(numMessages,messages);
-                  printf("%s\n", decode(messages,numMessages));
+                  // printf("Printing Matrix on client side\n");
+                  // print_matrix(numMessages,messages);
+                  // printf("%s\n", decode(messages,numMessages));
                   
                   for(i=0;i<numMessages;i++){
                     for(j=0; j<10; j++)
@@ -188,11 +258,52 @@ void client(void){
                   free_matrix(numMessages,messages);
                   Receive(&p[id],msg);
                   if(msg[0])
-                    printf("Client%d: Message %s acknowledged by Server\n", id,messageString);
+                    printf("Client%d: Add Message %s acknowledged by Server\n", id,messageString);
                   else
-                    printf("Client%d: Message %s not acknowledged by Server\n", id,messageString);
+                    printf("Client%d: Add Message %s not acknowledged by Server\n", id,messageString);
+                  break;
+          case 1: //delete  operation
+                  printf("Client%d: Sending delete message to server\n",id);
+                  //Message Header
+                  Send(&p[serverPort],msg);
+                  Receive(&p[id],msg);
+                  if(msg[0])
+                    printf("Client%d: Delete Message acknowledged by Server\n", id);
+                  else
+                    printf("Client%d: Delete Message not acknowledged by Server\n", id);
+                  break;
+          case 2: //modify operation
+                  printf("Client%d: Sending modify message to server\n",id);
+                  messageString = "MessageMessage";
+                  length = strlen(messageString);
+                  numMessages = length/10 + (length%10 !=0);
+                  msg[2]=numMessages;
+                  msg[3]=rand()%10;
+                   printf("Client%d: Modification location is %d\n",id, msg[3]);
+                  //Message Header
+                  Send(&p[serverPort],msg);
+                  messages = encode(messageString);
+
+                  // printf("Printing Matrix on client side\n");
+                  // print_matrix(numMessages,messages);
+                  // printf("%s\n", decode(messages,numMessages));
+                  
+                  for(i=0;i<numMessages;i++){
+                    for(j=0; j<10; j++)
+                      msg[j]=messages[i][j];
+                    printf("Client%d: Sending modify message%d to server\n",id,i);
+                    //print_matrix(1,msg);
+                    Send(&p[serverPort],msg);
+                  }
+                  free_matrix(numMessages,messages);
+                  Receive(&p[id],msg);
+                  if(msg[0])
+                    printf("Client%d: Modify Message %s acknowledged by Server\n", id,messageString);
+                  else
+                    printf("Client%d: Modify Message %s not acknowledged by Server\n", id,messageString);
+                  break;      
         }
-        sleep(1);
+        sleep(2);
     }
     
 }
@@ -214,7 +325,7 @@ int main()
     //for(i=10;i<100;i++)
         start_thread(client);
     run();
-    while (1) sleep(1);
+    while (1) sleep(2);
 }   
 
 // int main(){
