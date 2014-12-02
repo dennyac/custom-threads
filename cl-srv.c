@@ -25,32 +25,32 @@ int srvPort = 0;
 //Allocating ports 10 to 99 for clients
 int clientPorts = 1;
 
-void encode(char * string, int ** mat);
-void decode(int ** mat, int rows, char * string);
+void encode(char * string, int *** mat);
+void decode(int ** mat, int rows, char ** string);
 void print_matrix(int rows, int **mat);
 void free_matrix(int rows, int **mat);
 
-void encode(char * string, int ** mat){
+void encode(char * string, int *** mat){
 
   int length = strlen(string);
   int rows = length/10 + (length%10 !=0);
 
-    mat = (int **) malloc(sizeof(int *)*rows);
+    *mat = (int **) malloc(sizeof(int *)*rows);
     int i=0,j=0;
     for(i=0; i<rows; i++)
     /* Allocate array, store pointer  */
-        mat[i] = (int *) malloc(sizeof(int)*10); 
+        (*mat)[i] = (int *) malloc(sizeof(int)*10); 
 
     //Initialize all values to -1
     for(i=0;i<rows;i++){
       for(j=0;j<10;j++)
-        mat[i][j] = -1;
+        (*mat)[i][j] = -1;
     }
 
     int counter=0,msgNumber=0;
 
     for(i=0;i<length;i++){
-      mat[msgNumber][counter++] = (int)string[i];
+      (*mat)[msgNumber][counter++] = (int)string[i];
       if(counter%10==0) {
         msgNumber++;
         counter=0;
@@ -77,7 +77,7 @@ void free_matrix(int rows, int **mat){
 }
 
 
-void decode(int ** mat, int rows, char * string){
+void decode(int ** mat, int rows, char ** string){
   int offset=0,i=0,msgNumber=0,counter=0;
   
   while(mat[rows-1][i]!=-1 && i<10){
@@ -88,16 +88,16 @@ void decode(int ** mat, int rows, char * string){
 
   int stringLength = 10*(rows-1) + offset;
 
-  string = (char*)malloc((stringLength+1) * sizeof(char));
+  *string = (char*)malloc((stringLength+1) * sizeof(char));
 
   for(i=0;i<stringLength;i++){
-      string[i]=mat[msgNumber][counter++];
+      (*string)[i]=mat[msgNumber][counter++];
       if(counter%10==0) {
         msgNumber++;
         counter=0;
       }
   }
-  string[stringLength] = '\0';
+  (*string)[stringLength] = '\0';
 
  }
 
@@ -146,7 +146,7 @@ void server(void){
                   // print_matrix(numMessages,messages);
                   // printf("Decoded message at server%s\n", decode(messages,numMessages));
                   if(pos<10){
-                     decode(messages,numMessages,table[pos++]);
+                     decode(messages,numMessages,&table[pos++]);
 
                     msg[0]=1;
                     //Success
@@ -164,8 +164,8 @@ void server(void){
 
                   
                   if(pos>0){
-                    free(table[--pos]);
-
+                   // free(table[--pos]);
+                    table[--pos]=NULL;
                     msg[0]=1;
                     //Success
                     Send(&p[replyPort],msg);
@@ -197,8 +197,8 @@ void server(void){
                   // print_matrix(numMessages,messages);
                   // printf("Decoded message at server%s\n", decode(messages,numMessages));
                   if(table[location]!=NULL){
-                    free(table[location]);
-                    decode(messages,numMessages,table[location]);
+                    //free(table[location]);
+                    decode(messages,numMessages,&table[location]);
 
                     msg[0]=1;
                     //Success
@@ -230,7 +230,7 @@ void server(void){
 
                   for(i=0;i<10;i++){
                     if(numMsgs[i]!=-1){
-                       encode(table[i],messages);
+                       encode(table[i],&messages);
                       for(j=0;j<numMsgs[i];j++){
                         for(k=0; k<10; k++)
                           msg[k]=messages[j][k];
@@ -256,6 +256,7 @@ void client(void){
     int serverPort;
     int location=0;
     int length=0,numMessages=0;
+    int randNum=0;
     while(1){
         
         serverPort = srvPort;
@@ -270,13 +271,20 @@ void client(void){
         switch(operation){
           case 0: //add operation
                   printf("\tClient%d: Sending add request to server\n",id);
-                  messageString = "amsg";
+                  randNum=rand()%2;
+                  if(randNum==0){
+                    messageString="Adding new message";
+                  }
+                  else{
+                    messageString = "addMsg";
+                  }
+                  
                   length = strlen(messageString);
                   numMessages = length/10 + (length%10 !=0);
                   msg[2]=numMessages;
                   //Message Header
                   Send(&p[serverPort],msg);
-                  encode(messageString,messages);
+                  encode(messageString,&messages);
 
                   // printf("Printing Matrix on client side\n");
                   // print_matrix(numMessages,messages);
@@ -307,6 +315,13 @@ void client(void){
                   break;
           case 2: //modify operation
                   printf("\tClient%d: Sending modify request to server\n",id);
+                  randNum=rand()%2;
+                  if(randNum==0){
+                    messageString="Modifying message";
+                  }
+                  else{
+                    messageString = "modMsg";
+                  }
                   messageString = "mmsg";
                   length = strlen(messageString);
                   numMessages = length/10 + (length%10 !=0);
@@ -315,7 +330,7 @@ void client(void){
                   printf("\tClient%d: Modification location is %d\n",id, msg[3]);
                   //Message Header
                   Send(&p[serverPort],msg);
-                  encode(messageString,messages);
+                  encode(messageString,&messages);
 
                   // printf("Printing Matrix on client side\n");
                   // print_matrix(numMessages,messages);
@@ -355,6 +370,7 @@ void displayClient(void){
     int serverPort;
     int location=0;
     int length=0,numMessages=0;
+    int randNum=0;
     for(i=0;i<10;i++)
       table[i]=NULL;
     while(1){
@@ -399,21 +415,26 @@ void displayClient(void){
                     // printf("Printing Matrix on server side\n");
                     // print_matrix(numMessages,messages);
                       //printf("\t\tTable Entry[%d]: %s\n", i, );
-                      decode(messages,numMsgs[i],table[i]);
+                      decode(messages,numMsgs[i],&table[i]);
                       free_matrix(numMsgs[i],messages);
                     }
                   }
-
-                  for(i=0;i<10;i++){
-                    if(table[i]==NULL)
-                      printf("\t\tTable Entry[%d]: Empty\n", i);
-                    else
-                      printf("\t\tTable Entry[%d]: %s\n", i, table[i]);
+                  randNum=rand()%2;
+                  if(randNum==0){
+                    for(i=0;i<10;i++){
+                      if(table[i]==NULL)
+                        printf("\t\tTable Entry[%d]: Empty\n", i);
+                      else
+                        printf("\t\tTable Entry[%d]: %s\n", i, table[i]);
+                    }
                   }
+                  
+
 
                   for(i=0;i<10;i++){
                     if(table[i]!=NULL)
-                      free(table[i]);
+                      //free(table[i]);
+                      table[i]=NULL;
                   }
                   break;
           
