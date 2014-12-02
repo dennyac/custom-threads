@@ -448,6 +448,11 @@ void displayClient(void){
 
 int main()
 {
+    printf("The string message is encoded into messages (each character's ascii value is stored in the message) and sent to the server\n");
+    printf("The server decodes the message and stores it in its table.\n");
+    printf("Based on the size of the string the number of messages will vary\n");
+    printf("For client3, the entire table contents will be encoded and sent to the client via messages.\n");
+    sleep(2);
     srand(time(NULL));
     init_ports();
    // int i;
