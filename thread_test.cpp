@@ -22,6 +22,7 @@ using namespace std::chrono_literals;
 void thr1() {
 	while(1) {
         printf("thr1 sleep for 2 seconds!\n");
+        // sleep(2) resumes on recieving a caught signal
 		std::this_thread::sleep_for(2s);
 		printf("slept!\n");
 	}
@@ -30,6 +31,7 @@ void thr1() {
 void thr2() {
 	while(1) {
 		printf("thr2 sleep for 2 seconds!\n");
+		// sleep(2) resumes on recieving a caught signal
 		std::this_thread::sleep_for(2s);
 		printf("slept!\n");
 	}
@@ -144,27 +146,21 @@ void Timer::timer_handler(int signum) {
 }
 
 int YIELD_THREAD(void * arg) {
+	// timer is per process, the process it is set in must exist in order to recieve a signal
 	timer.set_timer(timer.Types.ITIMER_REAL, Timer::timer_handler, 1000, false);
-	while(1);
+	pause();
 	return 0;
 }
 
 int THREAD_CREATE(void * nu) {
-	start_thread(thr1);
-	start_thread(thr2);
 	Stack x = Stack();
 	x.alloc(4096);
 	puts("THREAD_CREATE starting YIELD_THREAD");
 	long int pid = clone(YIELD_THREAD, x.top, CLONE_VM|SIGCHLD, nullptr);
-	if (pid == -1) {
-		perror("THREAD_CREATE clone");
-		x.free();
-	}
-	if (waitid(P_PID, pid, nullptr, WEXITED) == -1) {
-		perror("waitid");
-		x.free();
-		return 0;
-	}
+	if (pid == -1) perror("THREAD_CREATE clone");
+	// sleep for 1 second to allow for pause
+	sleep(1);
+	// a stack is not needed since the process pauses
 	x.free();
 	return 0;
 }
@@ -174,6 +170,8 @@ int main(){
 	setvbuf(stdout, 0, _IOLBF, 0);
 	setvbuf(stderr, 0, _IOLBF, 0);
 
+	start_thread(thr1);
+	start_thread(thr2);
 	Stack x = Stack();
 	x.alloc(4096);
 	puts("starting THREAD_CREATE");
@@ -181,6 +179,7 @@ int main(){
 	if (pid == -1) {
 		perror("clone");
 		x.free();
+		return 0;
 	}
 	puts("waiting for THREAD_CREATE");
 	if (waitid(P_PID, pid, nullptr, WEXITED) == -1) {
@@ -188,6 +187,8 @@ int main(){
 		x.free();
 		return 0;
 	}
+	puts("waited for THREAD_CREATE");
 	x.free();
+	pause();
 	return 0;
 }
