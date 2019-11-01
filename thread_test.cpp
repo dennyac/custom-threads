@@ -138,7 +138,7 @@ void Timer::timer_handler(int signum) {
 		firstrun = true;
 		run();
 	} else {
-		fprintf (stderr, "> YIELDING FIRST RUN timer ms = %d, count = %03d\n", timer.ms_, count++);
+		fprintf (stderr, "> YIELDING timer ms = %d, count = %03d\n", timer.ms_, count++);
 		yield();
 	}
 }
