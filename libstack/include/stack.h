@@ -1,7 +1,7 @@
 #ifndef STACK_STACK
 #define STACK_STACK
 
-#include "direction.h"
+#include "internal/direction.h"
 #include <stdlib.h>
 
 class Stack {

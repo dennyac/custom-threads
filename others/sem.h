@@ -6,7 +6,7 @@
 	have to ensure that the P(sem) and V(sem) are atomic operations
 
 */
-#include "threads.h"
+#include "libthread/include/thread.h"
 
 typedef struct Semaphore_t {
      int count;

@@ -1,5 +1,5 @@
-#include "direction.h"
-#include "stack.h"
+#include "include/stack.h"
+
 void Stack::alloc(size_t size) {
     stack = new char[size];
     size = size;

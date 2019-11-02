@@ -1,5 +1,5 @@
-#include "direction.h"
-#include "stack.h"
+#include "include/stack.h"
+
 int Stack::internal::getStackDirection(int *addr) {
     int fun_local;
     if (addr < &fun_local) {
