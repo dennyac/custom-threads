@@ -6,6 +6,8 @@ Routines that will allow a program to run, with multiple threads, using preempti
 
 * Ubuntu 14.04
 * g++ compiler
+* gnu make
+* cmake
 
 ### To test threads library ###
 
