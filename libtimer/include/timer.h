@@ -3,8 +3,7 @@
 //
 
 #ifndef custom_threads_libtimer
-#define FOREGROUND_SERVICE_TIMER_H
-
+#define custom_threads_libtimer
 
 #include <stdlib.h>   // exit(), EXIT_FAILURE, EXIT_SUCCESS
 #include <signal.h>   // sigaction()
@@ -13,6 +12,8 @@
 #include <sys/time.h> // ITIMER_REAL, ITIMER_VIRTUAL, ITIMER_PROF, struct itimerval, setitimer()
 #include <stdbool.h>  // true, false
 #include <limits.h>   // INT_MAX
+
+#include "internal/sched.h"
 
 class Timer {
 public:
@@ -33,4 +34,4 @@ public:
     static void timer_handler (int signum);
 };
 
-#endif //FOREGROUND_SERVICE_TIMER_H
+#endif //custom_threads_libtimer
