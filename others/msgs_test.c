@@ -41,9 +41,8 @@ void server(void){
         printf("Server %d: Sending message on port %d\n",id,msg[0]);
         Send(&p[msg[0]],msg);
         printf("Server %d: Sent message on port %d\n",id,msg[0]);
-
         sleep(1);
-    }   
+    }
 }
 
 void client(void){
@@ -98,7 +97,10 @@ int main()
     for(i=10;i<100;i++)
         start_thread(client);
     run();
-    while (1) sleep(1);
+    while (1) {
+        printf("SLEEPING");
+        sleep(1);
+    }
 }   
 
 

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <TCB.h>
+#include "libthread/include/internal/TCB.h"
 struct Node
 {
 	int data;
